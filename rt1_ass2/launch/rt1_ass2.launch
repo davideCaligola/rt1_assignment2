@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+     <!-- Include package  assignment_2_2022 -->
+    <include file="$(find assignment_2_2022)/launch/assignment1.launch"/>
+
+    <arg name="freq" default="1.0"/>
+    
+    <param name="print_freq" value="$(arg freq)"/>
+
+    <node name="robot_command" pkg="rt1_ass2" type="robot_command.py" required="true" output="screen" launch-prefix="xterm -e"/>
+    <node name="robot_info_print" pkg="rt1_ass2" type="robot_info_print.py" output="screen" launch-prefix="xterm -e"/>
+    <node name="robot_goal_result_count_srv" pkg="rt1_ass2" type="robot_goal_result_count_srv.py"/>
+
+</launch>
