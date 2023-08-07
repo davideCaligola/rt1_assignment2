@@ -47,13 +47,39 @@ The whole simulation can be started using the `rt1_ass2.launch` file.
 The implementation of the node `robot_command.py` is better explained in the section [Command console](#command-console)
 
 # Installation
-The software has been tested in a machine with Ubuntu 20.04 LTS.  
-It is assumed that the ROS environment is already installed and working properly.  
-The package `rt1_ass2` makes use of the terminal [xterm](https://invisible-island.net/xterm/) to interact and provide information via console.  
-In Ubuntu it is possible to install it using apt:  
+Requirements:
+- ROS environment is already installed and working properly,
+- Git version control system properly installed,
+- a proper Github SSH key setup (see [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) for more information about it)  
+
+The software has been tested in a machine with Linux Ubuntu 20.04 LTS.  
+The package `rt1_ass2` makes use of the terminal [xterm](https://invisible-island.net/xterm/) to interact and to provide information via console.  
+In Ubuntu, it is possible to install it using apt:  
 ```shell
 sudo apt update && sudo apt -y install xterm
 ```
+To use the packages in this repository, create a directory where a catkin workspace will be created for running the packages:
+```
+mkdir test_ws
+```
+Clone the repository in the test_ws/src folder:
+```
+git clone git@github.com:davideCaligola/rt1_assignment2.git test_ws/src
+```
+Navigate into the workspace folder and build the packages
+```
+cd test_ws
+catkin_make
+```
+Setup the current workspace
+```
+source ./devel/setup.bash
+```
+Launch the simulation
+```
+roslaunch rt1_ass2 rt1_ass2.launch
+```
+See section [Use](#use) for more information on how to interact with it.
 
 # Use
 It is possible to launch the whole simulation using the provided launch file:
