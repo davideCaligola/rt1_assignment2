@@ -37,7 +37,7 @@ The requirements have been fulfilled with the package `rt1_ass2`:
    For convenience, it also provides the service `robot_current_goal_pos` which provides the planar position coordinates (x,y) of the current goal.
 
 2. node `robot_goal_result_count_srv.py`  
-   It implements the service `goal_result_counter` which, subscribing to the topic `/reaching_goalresult`, provides the number of goal reached or canceled.  
+   It implements the service `goal_result_counter` which, subscribing to the topic `/reaching_goal/result`, provides the number of goal reached or canceled.  
 
 3. node `robot_info_print.py`  
    It subscribes to the topic `/robot_info_odom` and the service `robot_current_goal_pos` to calculate the distance of the robot from the current goal and the average linear velocity.  
