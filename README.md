@@ -14,6 +14,8 @@ In this document the following arguments will be presented:
     - [function goal\_management](#function-goal_management)
 - [Improvements](#improvements)
 
+A complete documentation for each node functions of the implemented package `rt1_ass2` can be found at https://davidecaligola.github.io/rt1_assignment2/.
+
 # Introduction
 In this repository, the [ROS](https://www.ros.org) package `rt1_ass2` has been implemented to satisfy the requirements of the second assignemnt of the course [Research Track 1](https://corsi.unige.it/en/off.f/2022/ins/60235?codcla=10635) of [Robotics Engineering](https://corsi.unige.it/en/corsi/10635) course by [University degli Studi di Genova](https://unige.it).  
 The assignment is based on the ROS package [assagnemnt_2_2022](https://github.com/CarmineD8/assignment_2_2022) which implements, among other features, an action server to drive a robot with the [Bug 0 algorithm](https://www.cs.cmu.edu/~motionplanning/lecture/Chap2-Bug-Alg_howie.pdf) through a predefined environment. For convenience, such a package is included in this repository.  
