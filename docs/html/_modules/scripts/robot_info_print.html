@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.robot_info_print &mdash; rt2_ass1 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            rt2_ass1
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../nodes.html">Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../msg_link.html">msg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../srv_link.html">srv</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rt2_ass1</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.robot_info_print</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.robot_info_print</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This node subscribes to the topic ``/robot_info_odom`` and the service ``robot_current_goal_pos`` to calculate</span>
+<span class="sd">the distance of the robot from the current goal and the average linear velocity.</span>
+<span class="sd">The node prints such information on screen at frequency set by the parameter ``freq``.</span>
+<span class="sd">Such a parameter can be specified in the launch file used to start the whole simulation or from command line</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">rt1_ass2.msg</span> <span class="kn">import</span> <span class="n">Robot_info</span>
+<span class="kn">from</span> <span class="nn">rt1_ass2.srv</span> <span class="kn">import</span> <span class="n">GoalPosition</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">print_timer</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">robot_current_goal_pos_client</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">dist_to_goal</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="n">vel_cumulative</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">number_of_samples</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="robot_info_callback"><a class="viewcode-back" href="../../robot_info_print.html#scripts.robot_info_print.robot_info_callback">[docs]</a><span class="k">def</span> <span class="nf">robot_info_callback</span><span class="p">(</span><span class="n">robot_info</span><span class="p">:</span> <span class="n">Robot_info</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subscriber callback for the topic ``/robot_info_odom``.</span>
+<span class="sd">    Updates node global variables related to the current distance to the goal,</span>
+<span class="sd">    the cumulative velocity and the number of acquired samples.</span>
+
+<span class="sd">    :param robot_info: data of the topic ``/robot_info_odom``</span>
+<span class="sd">    :type robot_info: :ref:`Robot_info &lt;robot_info_ref&gt;`</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">dist_to_goal</span><span class="p">,</span> <span class="n">vel_cumulative</span><span class="p">,</span> <span class="n">number_of_samples</span>
+    <span class="k">global</span> <span class="n">robot_current_goal_pos_client</span>
+
+    <span class="c1"># get goal position</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">current_goal_pos</span> <span class="o">=</span> <span class="n">robot_current_goal_pos_client</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Service call to robot_current_goal_pos failed </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+    
+    <span class="c1"># calculate goal distance and cumulative linear velocity</span>
+    <span class="k">if</span> <span class="n">current_goal_pos</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+
+        <span class="c1"># calculate distance to goal</span>
+        <span class="n">dist_to_goal</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">current_goal_pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">robot_info</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">current_goal_pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">robot_info</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>        
+
+        <span class="c1"># update cumulative velocity</span>
+        <span class="n">vel_cumulative</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">robot_info</span><span class="o">.</span><span class="n">vel_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">robot_info</span><span class="o">.</span><span class="n">vel_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">number_of_samples</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dist_to_goal</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">vel_cumulative</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">number_of_samples</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    
+<div class="viewcode-block" id="print_callback"><a class="viewcode-back" href="../../robot_info_print.html#scripts.robot_info_print.print_callback">[docs]</a><span class="k">def</span> <span class="nf">print_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Timer callback to print on console the values of the current distance to the goal</span>
+<span class="sd">    and the average velocity</span>
+
+<span class="sd">    :param event: not used, just for callback interface</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">dist_to_goal</span><span class="p">,</span> <span class="n">vel_cumulative</span><span class="p">,</span> <span class="n">number_of_samples</span>
+    
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;============================&quot;</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;distance to goal: </span><span class="si">%1.3f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dist_to_goal</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;average linear velocity: </span><span class="si">%1.3f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">number_of_samples</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">vel_cumulative</span><span class="o">/</span><span class="n">number_of_samples</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="remove_timer"><a class="viewcode-back" href="../../robot_info_print.html#scripts.robot_info_print.remove_timer">[docs]</a><span class="k">def</span> <span class="nf">remove_timer</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Shutdown the timer for printing on console the information about the distance to the goal</span>
+<span class="sd">    and the average velocity</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">print_timer</span>
+    
+    <span class="c1"># stop timer</span>
+    <span class="n">print_timer</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../robot_info_print.html#scripts.robot_info_print.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function of the node</span>
+<span class="sd">      - initializes the node</span>
+<span class="sd">      - gets the ``freq`` parameter for setting the period the information about the distance to the goal</span>
+<span class="sd">        and the average velocity are printed on the console</span>
+<span class="sd">      - creates the subscriber for the topic ``/robot_info_odom``</span>
+<span class="sd">      - creates the server ``robot_current_goal_pos`` for providing the current goal position</span>
+<span class="sd">      - defines the timer for printing periodically the distance to the goal and the average velocity</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># global variable initialization</span>
+    <span class="k">global</span> <span class="n">print_timer</span>
+    <span class="k">global</span> <span class="n">dist_to_goal</span><span class="p">,</span> <span class="n">vel_cumulative</span>
+    <span class="k">global</span> <span class="n">robot_current_goal_pos_client</span>
+
+    <span class="n">dist_to_goal</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vel_cumulative</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># node initialization</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s2">&quot;robot_stat_print&quot;</span><span class="p">)</span>
+
+    <span class="c1"># get printing frequency</span>
+    <span class="n">print_freq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s2">&quot;/print_freq&quot;</span><span class="p">))</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;print_freq </span><span class="si">%1.3f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">print_freq</span><span class="p">)</span>
+
+    <span class="c1"># create subscriber for /robot_info</span>
+    <span class="n">robot_info_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;/robot_info_odom&quot;</span><span class="p">,</span> <span class="n">Robot_info</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">robot_info_callback</span><span class="p">)</span>
+    
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Waiting for robot_current_goal_pos service...&quot;</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s2">&quot;robot_current_goal_pos&quot;</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Service robot_current_goal_pos available&quot;</span><span class="p">)</span>
+
+    <span class="c1"># client for getting current goal position</span>
+    <span class="n">robot_current_goal_pos_client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s2">&quot;robot_current_goal_pos&quot;</span><span class="p">,</span> <span class="n">GoalPosition</span><span class="p">)</span>
+
+    <span class="c1"># define timer for printing robot stats</span>
+    <span class="n">print_timer</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">print_freq</span><span class="p">),</span> <span class="n">callback</span><span class="o">=</span><span class="n">print_callback</span><span class="p">)</span>
+
+    <span class="c1"># hook for shutdown</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">(</span><span class="n">remove_timer</span><span class="p">)</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Node robot_stat_print initialized&quot;</span><span class="p">)</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

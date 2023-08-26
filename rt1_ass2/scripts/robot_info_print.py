@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-
+"""
+This node subscribes to the topic ``/robot_info_odom`` and the service ``robot_current_goal_pos`` to calculate
+the distance of the robot from the current goal and the average linear velocity.
+The node prints such information on screen at frequency set by the parameter ``freq``.
+Such a parameter can be specified in the launch file used to start the whole simulation or from command line
+"""
 from __future__ import print_function
 import rospy
 from rt1_ass2.msg import Robot_info
@@ -13,6 +18,15 @@ vel_cumulative = 0.0
 number_of_samples = 0
 
 def robot_info_callback(robot_info: Robot_info):
+    """
+    Subscriber callback for the topic ``/robot_info_odom``.
+    Updates node global variables related to the current distance to the goal,
+    the cumulative velocity and the number of acquired samples.
+
+    :param robot_info: data of the topic ``/robot_info_odom``
+    :type robot_info: :ref:`Robot_info <robot_info_ref>`
+    :return: None
+    """
     global dist_to_goal, vel_cumulative, number_of_samples
     global robot_current_goal_pos_client
 
@@ -39,6 +53,13 @@ def robot_info_callback(robot_info: Robot_info):
 
     
 def print_callback(event):
+    """
+    Timer callback to print on console the values of the current distance to the goal
+    and the average velocity
+
+    :param event: not used, just for callback interface
+    :return: None
+    """
     global dist_to_goal, vel_cumulative, number_of_samples
     
     rospy.loginfo("============================")
@@ -46,12 +67,29 @@ def print_callback(event):
     rospy.loginfo("average linear velocity: %1.3f", 0.0 if number_of_samples == 0 else (vel_cumulative/number_of_samples))
 
 def remove_timer():
+    """
+    Shutdown the timer for printing on console the information about the distance to the goal
+    and the average velocity
+
+    :return: None
+    """
     global print_timer
     
     # stop timer
     print_timer.shutdown()
 
 def main():
+    """
+    Main function of the node
+      - initializes the node
+      - gets the ``freq`` parameter for setting the period the information about the distance to the goal
+        and the average velocity are printed on the console
+      - creates the subscriber for the topic ``/robot_info_odom``
+      - creates the server ``robot_current_goal_pos`` for providing the current goal position
+      - defines the timer for printing periodically the distance to the goal and the average velocity
+
+    :return: None
+    """
     # global variable initialization
     global print_timer
     global dist_to_goal, vel_cumulative

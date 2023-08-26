@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+"""
+In this node, a rough textual interface has been developed to interact with the action
+server provided by the given package
+`assignment_2_2002 <https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment\_2\_2022>`_
+through a respective action client. It allows to
+
+- set a goal to reach for the robot
+- cancel the current goal
+- get the information about the number of goals reached or canceled
+- quit the simulation.
+
+Furthermore, this node publishes the topic ``/robot_info_odom`` containing
+the planar position and linear velocity of the robot extracted by the topic ``/odom``
+For convenience, it also provides the service ``robot_current_goal_pos`` which provides
+the planar position coordinates (x,y) of the current goal.
+"""
 
 from __future__ import print_function
 import rospy
@@ -29,6 +45,11 @@ state = 0
 
 
 def prompt_get_command():
+    """
+    Prints on console the menu for choosing an action to perform
+
+    :return: None
+    """
     print("\n===============================")
     print("Choose your action:\n" +
           "g: set a new goal\n" +
@@ -38,7 +59,17 @@ def prompt_get_command():
     return input("Command: ")
 
 
-def saturate_input(x, limit):
+def saturate_input(x:float, limit:float):
+    """
+    Symmetric saturation of the number x to limit, so that \|x\| <= limit.
+
+    :param x: number to saturate to limit
+    :type x: float
+    :param limit: symmetric saturation limit
+    :type limit: float
+    :return: x if \|x\| < limit; sign(x)*limit if \|x\| >= limit
+    :rtype: float
+    """
     if (abs(x) > limit):
         return  math.copysign(limit, x)
     else:
@@ -46,6 +77,16 @@ def saturate_input(x, limit):
 
 
 def command_handling():
+    """
+    Handles the input command from command console. If command is 
+
+    - ``g``: it requests and aquires goal coordinates and moves state machine to state 1 (send goal to service)
+    - ``c``: if there is a current goal defined, moves state machine to state 2 (cancel goal)
+    - ``s``: moves state machine to state 3 (get goal result counts)
+    - ``q``: moves state machine to state 4 (terminate node)
+
+    :return: None
+    """
     global state
     global goal_action_client
     global goal_position
@@ -103,6 +144,13 @@ def command_handling():
 
 
 def send_goal_request():
+    """
+    - Sends the new goal coordinates to the service ``reaching_goal``
+    - Subscribes to the topic ``/reaching_goal/status``
+    - Moves state machine to state 5 (waiting for goal to be active)
+
+    :return: None
+    """
     global goal_action_client
     global state
     global goal_status_sub
@@ -124,6 +172,11 @@ def send_goal_request():
     state = 5 # wait for goal to be active
 
 def reset_goal_position():
+    """
+    Sets to None global variables ``goal_position`` and ``goal_pos_srv``
+
+    :return: None
+    """
     global goal_position
     global goal_pos_srv
 
@@ -131,6 +184,14 @@ def reset_goal_position():
     goal_pos_srv = None
 
 def cancel_goal():
+    """
+    - subscribes to topic ``/reaching_goal/status``
+    - sends the request to cancel the goal to the service ``/reaching_goal``
+    - resets internal goal position calling :func:`reset_goal_position`
+    - moves state machine to state 6 (waiting for goal to be preempted)
+
+    :return: None
+    """
     global goal_action_client
     global goal_status_sub
     global goal_position
@@ -148,6 +209,13 @@ def cancel_goal():
     state = 6 # wait for goal to be preempted
 
 def get_goal_result_counts():
+    """
+    - requests goal result counters to the service ``goal_result_counter`` (timeout 10.0s)
+    - prints on console the information about goals reached and goals canceld
+    - moves state machine to state 0 (waiting for input command)
+
+    :return: None
+    """
     global state, goal_result_counts_client
     timeout = 10.0    # (seconds) timeout for connecting to service goal_result_counter
     timeout_goal_result_counter = rospy.Duration(timeout)
@@ -180,10 +248,32 @@ def get_goal_result_counts():
     
 
 def terminate_node():
+    """
+    Sends the shutdonw signal to the node
+
+    :return: None
+    """
     rospy.signal_shutdown("\nShutting down node on user request...")
 
 
 def goal_status_callback(goal_status: GoalStatusArray):
+    """
+    Callback function for the topic ``/reaching_goal/status``.
+
+    - if goal status is ``ACTIVE`` and state machine is in state 5 (waiting for goal active)
+      the robot is moving toward the target. It moves the state machine to state 0
+      (waiting for input command)
+    - if goal status is ``PREEMPTED`` and state machine is in state 6
+      (waiting for goal to be preempted), the current goal has been removed. It moves the state
+      machine to state 0 (waiting for input command)
+    - if goal status is ``SUCCEEDED`` and state machine is in state 0 (waiting for input command)
+      the current goal has been reached. It removes the subscription to topic ``/reaching_goal/status``
+      and resets internal goal calling function :func:`reset_goal_position`
+
+    :param goal_status: new goal status provided by topic ``/reaching_goal/status``
+    :type goal_status: GoalStatusArray
+    :return: None
+    """
     global state
     global goal_status_sub
 
@@ -211,6 +301,20 @@ def goal_status_callback(goal_status: GoalStatusArray):
 
 
 def goal_management():
+    """
+    - creates a client for the service ``/reaching_goal``,
+    - defines the state machine for handling the different phases of the process:
+
+      * state 0: waiting for input command
+      * state 1: send goal request to service ``/reacing_goal``
+      * state 2: cancel current goal
+      * state 3: get goal result counters (reached and canceled)
+      * state 4: terminate the node
+      * state 5: waiting for goal to become active
+      * state 6: waiting for current goal to be preempted
+
+    :return: None
+    """
     global state
     global goal_position
     global goal_action_client
@@ -253,6 +357,16 @@ def goal_management():
 # publishes the robot info everytime
 # it gets a new odometry update
 def odom_callback(odom: Odometry):
+    """
+    Callback function for topic ``/odom``.
+
+    - acquires the planar position and velocity form the topic ``/odom``
+    - publishes those data on the topic ``/robot_info_odom``
+
+    :param odom: argument of the topic ``/odom``
+    :type odom: Odometry
+    :return: None
+    """
     global robot_info_odom_pub
 
     # define message to publish
@@ -269,6 +383,15 @@ def odom_callback(odom: Odometry):
 
 
 def robot_current_goal_pos_handler(req: GoalPositionRequest):
+    """
+    Handle for service ``robot_current_goal_pos``. If a goal is defined, it returns the current goal position;
+    if it is not defined, it returns an empty object.
+
+    :param req: not used. Default argument for service request
+    :type req: GoalPositionRequest
+    :return: current goal position
+    :rtype: :ref:`GoalPositionResponse <goalPosition_ref>`
+    """
     global goal_pos_srv
 
     # if there is not any current goal selected,
@@ -278,24 +401,35 @@ def robot_current_goal_pos_handler(req: GoalPositionRequest):
 
 # node main function
 def main():
+    """
+    Main function of the node
+      - initialize the node
+      - creates publisher for topic ``/robot_info_odom``
+      - creates subscriber for topic ``/odom`` of given package
+        `assignment_2_2002 <https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment\_2\_2022>`_
+      - creates server for service ``robot_current_goal_pos``
+      - launch function :func:`goal_management` for handling input command in a new thread
+
+    :return: None
+    """
     global goal_management_worker
     global robot_info_odom_pub
 
     # initialize node
     rospy.init_node("robot_command")
     
-    # create publisher for Robot info
+    # creates publisher for Robot info
     robot_info_odom_pub = rospy.Publisher("/robot_info_odom", Robot_info, queue_size=10)
 
-    # create subscriber for /odom
+    # creates subscriber for /odom
     odom_sub = rospy.Subscriber("/odom", Odometry, callback=odom_callback)
 
-    # create server for providing current goal position
+    # creates server for providing current goal position
     robot_current_goal_pos_srv = rospy.Service("robot_current_goal_pos", GoalPosition, robot_current_goal_pos_handler)
 
     rospy.loginfo("Node robot_command has been initialized")
 
-    # create thread for goal management
+    # creates thread for goal management
     goal_management_worker = threading.Thread(target=goal_management)
     goal_management_worker.start()
 

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.robot_command &mdash; rt2_ass1 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            rt2_ass1
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../nodes.html">Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../msg_link.html">msg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../srv_link.html">srv</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rt2_ass1</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.robot_command</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.robot_command</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">In this node, a rough textual interface has been developed to interact with the action</span>
+<span class="sd">server provided by the given package</span>
+<span class="sd">`assignment_2_2002 &lt;https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment\_2\_2022&gt;`_</span>
+<span class="sd">through a respective action client. It allows to</span>
+
+<span class="sd">- set a goal to reach for the robot</span>
+<span class="sd">- cancel the current goal</span>
+<span class="sd">- get the information about the number of goals reached or canceled</span>
+<span class="sd">- quit the simulation.</span>
+
+<span class="sd">Furthermore, this node publishes the topic ``/robot_info_odom`` containing</span>
+<span class="sd">the planar position and linear velocity of the robot extracted by the topic ``/odom``</span>
+<span class="sd">For convenience, it also provides the service ``robot_current_goal_pos`` which provides</span>
+<span class="sd">the planar position coordinates (x,y) of the current goal.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">assignment_2_2022.msg</span>
+<span class="kn">from</span> <span class="nn">nav_msgs.msg</span> <span class="kn">import</span> <span class="n">Odometry</span>
+<span class="kn">from</span> <span class="nn">rt1_ass2.msg</span> <span class="kn">import</span> <span class="n">Robot_info</span>
+<span class="kn">from</span> <span class="nn">rt1_ass2.srv</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="kn">from</span> <span class="nn">actionlib_msgs.msg</span> <span class="kn">import</span> <span class="n">GoalStatusArray</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">robot_info_odom_pub</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">goal_action_client</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">goal_status_sub</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">goal_position</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">goal_pos_srv</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">goal_result_counts_client</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">state</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># states:</span>
+<span class="c1"># 0: requesting command</span>
+<span class="c1"># 1: send goal to server</span>
+<span class="c1"># 2: cancel goal</span>
+<span class="c1"># 3: get goal result counting</span>
+<span class="c1"># 4: terminate node</span>
+<span class="c1"># 5: waiting for goal active</span>
+<span class="c1"># 6: waiting for goal canceled</span>
+
+
+<div class="viewcode-block" id="prompt_get_command"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.prompt_get_command">[docs]</a><span class="k">def</span> <span class="nf">prompt_get_command</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints on console the menu for choosing an action to perform</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">===============================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Choose your action:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+          <span class="s2">&quot;g: set a new goal</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+          <span class="s2">&quot;c: cancel current goal</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+          <span class="s2">&quot;s: get counter on how many goals have been reached/canceled&quot;</span> <span class="o">+</span>
+          <span class="s2">&quot;q: quit (it takes time to shutdown everything, so please wait a little...)&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Command: &quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="saturate_input"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.saturate_input">[docs]</a><span class="k">def</span> <span class="nf">saturate_input</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span><span class="nb">float</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Symmetric saturation of the number x to limit, so that \|x\| &lt;= limit.</span>
+
+<span class="sd">    :param x: number to saturate to limit</span>
+<span class="sd">    :type x: float</span>
+<span class="sd">    :param limit: symmetric saturation limit</span>
+<span class="sd">    :type limit: float</span>
+<span class="sd">    :return: x if \|x\| &lt; limit; sign(x)*limit if \|x\| &gt;= limit</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">):</span>
+        <span class="k">return</span>  <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="command_handling"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.command_handling">[docs]</a><span class="k">def</span> <span class="nf">command_handling</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handles the input command from command console. If command is </span>
+
+<span class="sd">    - ``g``: it requests and aquires goal coordinates and moves state machine to state 1 (send goal to service)</span>
+<span class="sd">    - ``c``: if there is a current goal defined, moves state machine to state 2 (cancel goal)</span>
+<span class="sd">    - ``s``: moves state machine to state 3 (get goal result counts)</span>
+<span class="sd">    - ``q``: moves state machine to state 4 (terminate node)</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="k">global</span> <span class="n">goal_action_client</span>
+    <span class="k">global</span> <span class="n">goal_position</span>
+
+    <span class="k">if</span> <span class="n">goal_position</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">goal_position</span> <span class="o">=</span> <span class="n">assignment_2_2022</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PlanningActionGoal</span><span class="p">()</span><span class="o">.</span><span class="n">goal</span>
+    
+    <span class="c1"># symmetric coordinate limits in absolute value </span>
+    <span class="n">x_lim</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">y_lim</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>       <span class="c1"># print command request</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">prompt_get_command</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>      <span class="c1"># set a new goal</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Please enter the goal to reach (the values are automatically limited in the range [-8,8])&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">saturate_input</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">input</span><span class="p">(</span><span class="s2">&quot;x: &quot;</span><span class="p">)),</span> <span class="n">x_lim</span><span class="p">)</span>
+            <span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">saturate_input</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">input</span><span class="p">(</span><span class="s2">&quot;y: &quot;</span><span class="p">)),</span> <span class="n">y_lim</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Something went wrong entering the goal coordinates:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sending goal: (&quot;</span><span class="o">+</span>
+                <span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">,&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">+</span>
+                <span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        
+        <span class="n">state</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># send goal</span>
+        <span class="k">return</span>
+    
+    <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>    <span class="c1"># cancel current goal</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># check if there is a goal to preempt</span>
+        <span class="n">goal_state</span> <span class="o">=</span> <span class="n">goal_action_client</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">goal_action_client</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span> <span class="o">==</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">GoalStatus</span><span class="o">.</span><span class="n">LOST</span> <span class="ow">or</span>
+            <span class="n">goal_action_client</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span> <span class="o">==</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">GoalStatus</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">There is not any goal to delete&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Removing current goal...&quot;</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># cancel goal</span>
+    
+    <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>    <span class="c1"># get goal result counts</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;q&#39;</span><span class="p">:</span>    <span class="c1"># terminate node</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># reset command</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Wrong command!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="send_goal_request"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.send_goal_request">[docs]</a><span class="k">def</span> <span class="nf">send_goal_request</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - Sends the new goal coordinates to the service ``reaching_goal``</span>
+<span class="sd">    - Subscribes to the topic ``/reaching_goal/status``</span>
+<span class="sd">    - Moves state machine to state 5 (waiting for goal to be active)</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">goal_action_client</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="k">global</span> <span class="n">goal_status_sub</span>
+    <span class="k">global</span> <span class="n">goal_pos_srv</span>
+    
+    <span class="c1"># create subscriber for goal result</span>
+    <span class="n">goal_status_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;/reaching_goal/status&quot;</span><span class="p">,</span> <span class="n">GoalStatusArray</span><span class="p">,</span> <span class="n">goal_status_callback</span><span class="p">)</span>
+
+    <span class="c1"># set current goal position for server</span>
+    <span class="n">goal_pos_srv</span> <span class="o">=</span> <span class="n">GoalPositionResponse</span><span class="p">()</span>
+    <span class="n">goal_pos_srv</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">goal_pos_srv</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">goal_pos_srv</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">goal_position</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;send goal&quot;</span><span class="p">)</span>
+    <span class="c1"># send goal request</span>
+    <span class="n">goal_action_client</span><span class="o">.</span><span class="n">send_goal</span><span class="p">(</span><span class="n">goal_position</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># wait for goal to be active</span></div>
+
+<div class="viewcode-block" id="reset_goal_position"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.reset_goal_position">[docs]</a><span class="k">def</span> <span class="nf">reset_goal_position</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets to None global variables ``goal_position`` and ``goal_pos_srv``</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">goal_position</span>
+    <span class="k">global</span> <span class="n">goal_pos_srv</span>
+
+    <span class="n">goal_position</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">goal_pos_srv</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="cancel_goal"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.cancel_goal">[docs]</a><span class="k">def</span> <span class="nf">cancel_goal</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - subscribes to topic ``/reaching_goal/status``</span>
+<span class="sd">    - sends the request to cancel the goal to the service ``/reaching_goal``</span>
+<span class="sd">    - resets internal goal position calling :func:`reset_goal_position`</span>
+<span class="sd">    - moves state machine to state 6 (waiting for goal to be preempted)</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">goal_action_client</span>
+    <span class="k">global</span> <span class="n">goal_status_sub</span>
+    <span class="k">global</span> <span class="n">goal_position</span>
+    <span class="k">global</span> <span class="n">state</span>
+    
+    <span class="c1"># create subscriber for goal result</span>
+    <span class="n">goal_status_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;/reaching_goal/status&quot;</span><span class="p">,</span> <span class="n">GoalStatusArray</span><span class="p">,</span> <span class="n">goal_status_callback</span><span class="p">)</span>
+
+    <span class="c1"># cancel current goal</span>
+    <span class="n">goal_action_client</span><span class="o">.</span><span class="n">cancel_goal</span><span class="p">()</span>
+
+    <span class="c1"># reset goal position</span>
+    <span class="n">reset_goal_position</span><span class="p">()</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="mi">6</span> <span class="c1"># wait for goal to be preempted</span></div>
+
+<div class="viewcode-block" id="get_goal_result_counts"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.get_goal_result_counts">[docs]</a><span class="k">def</span> <span class="nf">get_goal_result_counts</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - requests goal result counters to the service ``goal_result_counter`` (timeout 10.0s)</span>
+<span class="sd">    - prints on console the information about goals reached and goals canceld</span>
+<span class="sd">    - moves state machine to state 0 (waiting for input command)</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">state</span><span class="p">,</span> <span class="n">goal_result_counts_client</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mf">10.0</span>    <span class="c1"># (seconds) timeout for connecting to service goal_result_counter</span>
+    <span class="n">timeout_goal_result_counter</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+
+    <span class="c1"># check for service</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Waiting for goal_result_counter service (</span><span class="si">{:.1f}</span><span class="s2">s)...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timeout</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s2">&quot;goal_result_counter&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout_goal_result_counter</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span><span class="p">,</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSException</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Error while waiting for the service goal_result_counter.</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># create client, if not defined yet</span>
+    <span class="k">if</span> <span class="n">goal_result_counts_client</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># create client for getting goal result counts</span>
+        <span class="n">goal_result_counts_client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s2">&quot;goal_result_counter&quot;</span><span class="p">,</span> <span class="n">GoalResultCounter</span><span class="p">)</span>
+    
+    <span class="c1"># get goal result counters</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">goal_result_counts</span> <span class="o">=</span> <span class="n">goal_result_counts_client</span><span class="p">()</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Goals reached: </span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">goal_result_counts</span><span class="o">.</span><span class="n">reached</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Goals canceled: </span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">goal_result_counts</span><span class="o">.</span><span class="n">canceled</span><span class="p">))</span>
+    
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Service call to goal_result_counter failed </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="mi">0</span></div>
+    
+
+<div class="viewcode-block" id="terminate_node"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.terminate_node">[docs]</a><span class="k">def</span> <span class="nf">terminate_node</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sends the shutdonw signal to the node</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">signal_shutdown</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Shutting down node on user request...&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="goal_status_callback"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.goal_status_callback">[docs]</a><span class="k">def</span> <span class="nf">goal_status_callback</span><span class="p">(</span><span class="n">goal_status</span><span class="p">:</span> <span class="n">GoalStatusArray</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Callback function for the topic ``/reaching_goal/status``.</span>
+
+<span class="sd">    - if goal status is ``ACTIVE`` and state machine is in state 5 (waiting for goal active)</span>
+<span class="sd">      the robot is moving toward the target. It moves the state machine to state 0</span>
+<span class="sd">      (waiting for input command)</span>
+<span class="sd">    - if goal status is ``PREEMPTED`` and state machine is in state 6</span>
+<span class="sd">      (waiting for goal to be preempted), the current goal has been removed. It moves the state</span>
+<span class="sd">      machine to state 0 (waiting for input command)</span>
+<span class="sd">    - if goal status is ``SUCCEEDED`` and state machine is in state 0 (waiting for input command)</span>
+<span class="sd">      the current goal has been reached. It removes the subscription to topic ``/reaching_goal/status``</span>
+<span class="sd">      and resets internal goal calling function :func:`reset_goal_position`</span>
+
+<span class="sd">    :param goal_status: new goal status provided by topic ``/reaching_goal/status``</span>
+<span class="sd">    :type goal_status: GoalStatusArray</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="k">global</span> <span class="n">goal_status_sub</span>
+
+    <span class="c1"># check that status list is not empty</span>
+    <span class="k">if</span> <span class="n">goal_status</span><span class="o">.</span><span class="n">status_list</span><span class="p">:</span>
+        
+        <span class="c1"># waiting for activating the goal do to a new goal request</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">goal_status</span><span class="o">.</span><span class="n">status_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">GoalStatus</span><span class="o">.</span><span class="n">ACTIVE</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">5</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Moving toward the goal...&quot;</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span>
+
+        <span class="c1"># waiting for removing the goal due to a cancel goal request</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">goal_status</span><span class="o">.</span><span class="n">status_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">GoalStatus</span><span class="o">.</span><span class="n">PREEMPTED</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">6</span><span class="p">):</span>
+            <span class="n">goal_status_sub</span><span class="o">.</span><span class="n">unregister</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Goal removed&quot;</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span>
+        
+        <span class="c1"># reset goal position once current goal is reached</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">goal_status</span><span class="o">.</span><span class="n">status_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">GoalStatus</span><span class="o">.</span><span class="n">SUCCEEDED</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">goal_status_sub</span><span class="o">.</span><span class="n">unregister</span><span class="p">()</span>
+            
+            <span class="n">reset_goal_position</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="goal_management"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.goal_management">[docs]</a><span class="k">def</span> <span class="nf">goal_management</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - creates a client for the service ``/reaching_goal``,</span>
+<span class="sd">    - defines the state machine for handling the different phases of the process:</span>
+
+<span class="sd">      * state 0: waiting for input command</span>
+<span class="sd">      * state 1: send goal request to service ``/reacing_goal``</span>
+<span class="sd">      * state 2: cancel current goal</span>
+<span class="sd">      * state 3: get goal result counters (reached and canceled)</span>
+<span class="sd">      * state 4: terminate the node</span>
+<span class="sd">      * state 5: waiting for goal to become active</span>
+<span class="sd">      * state 6: waiting for current goal to be preempted</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="k">global</span> <span class="n">goal_position</span>
+    <span class="k">global</span> <span class="n">goal_action_client</span>
+
+    <span class="c1"># create simple action client</span>
+    <span class="n">goal_action_client</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionClient</span><span class="p">(</span><span class="s2">&quot;/reaching_goal&quot;</span><span class="p">,</span> <span class="n">assignment_2_2022</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PlanningAction</span><span class="p">)</span>
+
+    <span class="c1"># wait for action server</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;waiting for server /reaching_goal...&quot;</span><span class="p">)</span>
+    <span class="n">goal_action_client</span><span class="o">.</span><span class="n">wait_for_server</span><span class="p">()</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Server /reaching_goal available&quot;</span><span class="p">)</span>
+
+    <span class="c1"># manage goal</span>
+    <span class="k">while</span> <span class="p">(</span><span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">command_handling</span><span class="p">()</span>
+        
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">send_goal_request</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">cancel_goal</span><span class="p">()</span>
+        
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">get_goal_result_counts</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">terminate_node</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="c1"># waiting for goal active</span>
+            <span class="k">pass</span>
+
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="c1"># waiting for goal preempted</span>
+            <span class="k">pass</span></div>
+
+
+<span class="c1"># odometry subscriber callback</span>
+<span class="c1"># publishes the robot info everytime</span>
+<span class="c1"># it gets a new odometry update</span>
+<div class="viewcode-block" id="odom_callback"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.odom_callback">[docs]</a><span class="k">def</span> <span class="nf">odom_callback</span><span class="p">(</span><span class="n">odom</span><span class="p">:</span> <span class="n">Odometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Callback function for topic ``/odom``.</span>
+
+<span class="sd">    - acquires the planar position and velocity form the topic ``/odom``</span>
+<span class="sd">    - publishes those data on the topic ``/robot_info_odom``</span>
+
+<span class="sd">    :param odom: argument of the topic ``/odom``</span>
+<span class="sd">    :type odom: Odometry</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">robot_info_odom_pub</span>
+
+    <span class="c1"># define message to publish</span>
+    <span class="n">robot_info</span> <span class="o">=</span> <span class="n">Robot_info</span><span class="p">()</span>
+
+    <span class="c1"># set robot info values</span>
+    <span class="n">robot_info</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">odom</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">robot_info</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">odom</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">robot_info</span><span class="o">.</span><span class="n">vel_x</span> <span class="o">=</span> <span class="n">odom</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">robot_info</span><span class="o">.</span><span class="n">vel_y</span> <span class="o">=</span> <span class="n">odom</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">y</span>
+
+    <span class="c1"># publish robot info</span>
+    <span class="n">robot_info_odom_pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">robot_info</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="robot_current_goal_pos_handler"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.robot_current_goal_pos_handler">[docs]</a><span class="k">def</span> <span class="nf">robot_current_goal_pos_handler</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">GoalPositionRequest</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle for service ``robot_current_goal_pos``. If a goal is defined, it returns the current goal position;</span>
+<span class="sd">    if it is not defined, it returns an empty object.</span>
+
+<span class="sd">    :param req: not used. Default argument for service request</span>
+<span class="sd">    :type req: GoalPositionRequest</span>
+<span class="sd">    :return: current goal position</span>
+<span class="sd">    :rtype: :ref:`GoalPositionResponse &lt;goalPosition_ref&gt;`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">goal_pos_srv</span>
+
+    <span class="c1"># if there is not any current goal selected,</span>
+    <span class="c1"># return an empty dictionary</span>
+    <span class="k">return</span> <span class="n">goal_pos_srv</span> <span class="k">if</span> <span class="n">goal_pos_srv</span> <span class="k">else</span> <span class="p">{}</span></div>
+
+
+<span class="c1"># node main function</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../robot_command.html#scripts.robot_command.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function of the node</span>
+<span class="sd">      - initialize the node</span>
+<span class="sd">      - creates publisher for topic ``/robot_info_odom``</span>
+<span class="sd">      - creates subscriber for topic ``/odom`` of given package</span>
+<span class="sd">        `assignment_2_2002 &lt;https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment\_2\_2022&gt;`_</span>
+<span class="sd">      - creates server for service ``robot_current_goal_pos``</span>
+<span class="sd">      - launch function :func:`goal_management` for handling input command in a new thread</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">goal_management_worker</span>
+    <span class="k">global</span> <span class="n">robot_info_odom_pub</span>
+
+    <span class="c1"># initialize node</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s2">&quot;robot_command&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># creates publisher for Robot info</span>
+    <span class="n">robot_info_odom_pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s2">&quot;/robot_info_odom&quot;</span><span class="p">,</span> <span class="n">Robot_info</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="c1"># creates subscriber for /odom</span>
+    <span class="n">odom_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;/odom&quot;</span><span class="p">,</span> <span class="n">Odometry</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">odom_callback</span><span class="p">)</span>
+
+    <span class="c1"># creates server for providing current goal position</span>
+    <span class="n">robot_current_goal_pos_srv</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Service</span><span class="p">(</span><span class="s2">&quot;robot_current_goal_pos&quot;</span><span class="p">,</span> <span class="n">GoalPosition</span><span class="p">,</span> <span class="n">robot_current_goal_pos_handler</span><span class="p">)</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Node robot_command has been initialized&quot;</span><span class="p">)</span>
+
+    <span class="c1"># creates thread for goal management</span>
+    <span class="n">goal_management_worker</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">goal_management</span><span class="p">)</span>
+    <span class="n">goal_management_worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>robot_command &mdash; rt2_ass1 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="robot_goal_result_count_srv" href="robot_goal_result_count_srv.html" />
+    <link rel="prev" title="Nodes" href="nodes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            rt2_ass1
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="nodes.html">Nodes</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">robot_command</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.cancel_goal"><code class="docutils literal notranslate"><span class="pre">cancel_goal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.command_handling"><code class="docutils literal notranslate"><span class="pre">command_handling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.get_goal_result_counts"><code class="docutils literal notranslate"><span class="pre">get_goal_result_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.goal_management"><code class="docutils literal notranslate"><span class="pre">goal_management()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.goal_status_callback"><code class="docutils literal notranslate"><span class="pre">goal_status_callback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.odom_callback"><code class="docutils literal notranslate"><span class="pre">odom_callback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.prompt_get_command"><code class="docutils literal notranslate"><span class="pre">prompt_get_command()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.reset_goal_position"><code class="docutils literal notranslate"><span class="pre">reset_goal_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.robot_current_goal_pos_handler"><code class="docutils literal notranslate"><span class="pre">robot_current_goal_pos_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.saturate_input"><code class="docutils literal notranslate"><span class="pre">saturate_input()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.send_goal_request"><code class="docutils literal notranslate"><span class="pre">send_goal_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_command.terminate_node"><code class="docutils literal notranslate"><span class="pre">terminate_node()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="robot_goal_result_count_srv.html">robot_goal_result_count_srv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot_info_print.html">robot_info_print</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="msg_link.html">msg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="srv_link.html">srv</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rt2_ass1</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="nodes.html">Nodes</a></li>
+      <li class="breadcrumb-item active">robot_command</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/robot_command.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scripts.robot_command">
+<span id="robot-command"></span><h1>robot_command<a class="headerlink" href="#module-scripts.robot_command" title="Permalink to this heading"></a></h1>
+<p>In this node, a rough textual interface has been developed to interact with the action
+server provided by the given package
+<a class="reference external" href="https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment_2_2022">assignment_2_2002</a>
+through a respective action client. It allows to</p>
+<ul class="simple">
+<li><p>set a goal to reach for the robot</p></li>
+<li><p>cancel the current goal</p></li>
+<li><p>get the information about the number of goals reached or canceled</p></li>
+<li><p>quit the simulation.</p></li>
+</ul>
+<p>Furthermore, this node publishes the topic <code class="docutils literal notranslate"><span class="pre">/robot_info_odom</span></code> containing
+the planar position and linear velocity of the robot extracted by the topic <code class="docutils literal notranslate"><span class="pre">/odom</span></code>
+For convenience, it also provides the service <code class="docutils literal notranslate"><span class="pre">robot_current_goal_pos</span></code> which provides
+the planar position coordinates (x,y) of the current goal.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.cancel_goal">
+<span class="sig-name descname"><span class="pre">cancel_goal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#cancel_goal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.cancel_goal" title="Permalink to this definition"></a></dt>
+<dd><ul class="simple">
+<li><p>subscribes to topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/status</span></code></p></li>
+<li><p>sends the request to cancel the goal to the service <code class="docutils literal notranslate"><span class="pre">/reaching_goal</span></code></p></li>
+<li><p>resets internal goal position calling <a class="reference internal" href="#scripts.robot_command.reset_goal_position" title="scripts.robot_command.reset_goal_position"><code class="xref py py-func docutils literal notranslate"><span class="pre">reset_goal_position()</span></code></a></p></li>
+<li><p>moves state machine to state 6 (waiting for goal to be preempted)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.command_handling">
+<span class="sig-name descname"><span class="pre">command_handling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#command_handling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.command_handling" title="Permalink to this definition"></a></dt>
+<dd><p>Handles the input command from command console. If command is</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code>: it requests and aquires goal coordinates and moves state machine to state 1 (send goal to service)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c</span></code>: if there is a current goal defined, moves state machine to state 2 (cancel goal)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: moves state machine to state 3 (get goal result counts)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">q</span></code>: moves state machine to state 4 (terminate node)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.get_goal_result_counts">
+<span class="sig-name descname"><span class="pre">get_goal_result_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#get_goal_result_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.get_goal_result_counts" title="Permalink to this definition"></a></dt>
+<dd><ul class="simple">
+<li><p>requests goal result counters to the service <code class="docutils literal notranslate"><span class="pre">goal_result_counter</span></code> (timeout 10.0s)</p></li>
+<li><p>prints on console the information about goals reached and goals canceld</p></li>
+<li><p>moves state machine to state 0 (waiting for input command)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.goal_management">
+<span class="sig-name descname"><span class="pre">goal_management</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#goal_management"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.goal_management" title="Permalink to this definition"></a></dt>
+<dd><ul class="simple">
+<li><p>creates a client for the service <code class="docutils literal notranslate"><span class="pre">/reaching_goal</span></code>,</p></li>
+<li><p>defines the state machine for handling the different phases of the process:</p>
+<ul>
+<li><p>state 0: waiting for input command</p></li>
+<li><p>state 1: send goal request to service <code class="docutils literal notranslate"><span class="pre">/reacing_goal</span></code></p></li>
+<li><p>state 2: cancel current goal</p></li>
+<li><p>state 3: get goal result counters (reached and canceled)</p></li>
+<li><p>state 4: terminate the node</p></li>
+<li><p>state 5: waiting for goal to become active</p></li>
+<li><p>state 6: waiting for current goal to be preempted</p></li>
+</ul>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.goal_status_callback">
+<span class="sig-name descname"><span class="pre">goal_status_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GoalStatusArray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#goal_status_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.goal_status_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function for the topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/status</span></code>.</p>
+<ul class="simple">
+<li><p>if goal status is <code class="docutils literal notranslate"><span class="pre">ACTIVE</span></code> and state machine is in state 5 (waiting for goal active)
+the robot is moving toward the target. It moves the state machine to state 0
+(waiting for input command)</p></li>
+<li><p>if goal status is <code class="docutils literal notranslate"><span class="pre">PREEMPTED</span></code> and state machine is in state 6
+(waiting for goal to be preempted), the current goal has been removed. It moves the state
+machine to state 0 (waiting for input command)</p></li>
+<li><p>if goal status is <code class="docutils literal notranslate"><span class="pre">SUCCEEDED</span></code> and state machine is in state 0 (waiting for input command)
+the current goal has been reached. It removes the subscription to topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/status</span></code>
+and resets internal goal calling function <a class="reference internal" href="#scripts.robot_command.reset_goal_position" title="scripts.robot_command.reset_goal_position"><code class="xref py py-func docutils literal notranslate"><span class="pre">reset_goal_position()</span></code></a></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>goal_status</strong> (<em>GoalStatusArray</em>) – new goal status provided by topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/status</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.main" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Main function of the node</dt><dd><ul class="simple">
+<li><p>initialize the node</p></li>
+<li><p>creates publisher for topic <code class="docutils literal notranslate"><span class="pre">/robot_info_odom</span></code></p></li>
+<li><p>creates subscriber for topic <code class="docutils literal notranslate"><span class="pre">/odom</span></code> of given package
+<a class="reference external" href="https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment_2_2022">assignment_2_2002</a></p></li>
+<li><p>creates server for service <code class="docutils literal notranslate"><span class="pre">robot_current_goal_pos</span></code></p></li>
+<li><p>launch function <a class="reference internal" href="#scripts.robot_command.goal_management" title="scripts.robot_command.goal_management"><code class="xref py py-func docutils literal notranslate"><span class="pre">goal_management()</span></code></a> for handling input command in a new thread</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.odom_callback">
+<span class="sig-name descname"><span class="pre">odom_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">odom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Odometry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#odom_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.odom_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function for topic <code class="docutils literal notranslate"><span class="pre">/odom</span></code>.</p>
+<ul class="simple">
+<li><p>acquires the planar position and velocity form the topic <code class="docutils literal notranslate"><span class="pre">/odom</span></code></p></li>
+<li><p>publishes those data on the topic <code class="docutils literal notranslate"><span class="pre">/robot_info_odom</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>odom</strong> (<em>Odometry</em>) – argument of the topic <code class="docutils literal notranslate"><span class="pre">/odom</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.prompt_get_command">
+<span class="sig-name descname"><span class="pre">prompt_get_command</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#prompt_get_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.prompt_get_command" title="Permalink to this definition"></a></dt>
+<dd><p>Prints on console the menu for choosing an action to perform</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.reset_goal_position">
+<span class="sig-name descname"><span class="pre">reset_goal_position</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#reset_goal_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.reset_goal_position" title="Permalink to this definition"></a></dt>
+<dd><p>Sets to None global variables <code class="docutils literal notranslate"><span class="pre">goal_position</span></code> and <code class="docutils literal notranslate"><span class="pre">goal_pos_srv</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.robot_current_goal_pos_handler">
+<span class="sig-name descname"><span class="pre">robot_current_goal_pos_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">req</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GoalPositionRequest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#robot_current_goal_pos_handler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.robot_current_goal_pos_handler" title="Permalink to this definition"></a></dt>
+<dd><p>Handle for service <code class="docutils literal notranslate"><span class="pre">robot_current_goal_pos</span></code>. If a goal is defined, it returns the current goal position;
+if it is not defined, it returns an empty object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>req</strong> (<em>GoalPositionRequest</em>) – not used. Default argument for service request</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>current goal position</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="srv_link.html#goalposition-ref"><span class="std std-ref">GoalPositionResponse</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.saturate_input">
+<span class="sig-name descname"><span class="pre">saturate_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#saturate_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.saturate_input" title="Permalink to this definition"></a></dt>
+<dd><p>Symmetric saturation of the number x to limit, so that |x| &lt;= limit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – number to saturate to limit</p></li>
+<li><p><strong>limit</strong> (<em>float</em>) – symmetric saturation limit</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>x if |x| &lt; limit; sign(x)*limit if |x| &gt;= limit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.send_goal_request">
+<span class="sig-name descname"><span class="pre">send_goal_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#send_goal_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.send_goal_request" title="Permalink to this definition"></a></dt>
+<dd><ul class="simple">
+<li><p>Sends the new goal coordinates to the service <code class="docutils literal notranslate"><span class="pre">reaching_goal</span></code></p></li>
+<li><p>Subscribes to the topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/status</span></code></p></li>
+<li><p>Moves state machine to state 5 (waiting for goal to be active)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_command.terminate_node">
+<span class="sig-name descname"><span class="pre">terminate_node</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_command.html#terminate_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_command.terminate_node" title="Permalink to this definition"></a></dt>
+<dd><p>Sends the shutdonw signal to the node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nodes.html" class="btn btn-neutral float-left" title="Nodes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="robot_goal_result_count_srv.html" class="btn btn-neutral float-right" title="robot_goal_result_count_srv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
