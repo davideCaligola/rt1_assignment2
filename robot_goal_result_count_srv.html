@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>robot_goal_result_count_srv &mdash; rt2_ass1 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="robot_info_print" href="robot_info_print.html" />
+    <link rel="prev" title="robot_command" href="robot_command.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            rt2_ass1
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="nodes.html">Nodes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="robot_command.html">robot_command</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">robot_goal_result_count_srv</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_goal_result_count_srv.goal_status_callback"><code class="docutils literal notranslate"><span class="pre">goal_status_callback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_goal_result_count_srv.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.robot_goal_result_count_srv.robot_goal_count_handle"><code class="docutils literal notranslate"><span class="pre">robot_goal_count_handle()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="robot_info_print.html">robot_info_print</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="msg_link.html">msg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="srv_link.html">srv</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rt2_ass1</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="nodes.html">Nodes</a></li>
+      <li class="breadcrumb-item active">robot_goal_result_count_srv</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/robot_goal_result_count_srv.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scripts.robot_goal_result_count_srv">
+<span id="robot-goal-result-count-srv"></span><h1>robot_goal_result_count_srv<a class="headerlink" href="#module-scripts.robot_goal_result_count_srv" title="Permalink to this heading"></a></h1>
+<p>This node implements the service <a class="reference internal" href="srv_link.html#goalresultcounter-ref"><span class="std std-ref">goal_result_counter</span></a> which, subscribing to the topic 
+<code class="docutils literal notranslate"><span class="pre">/reaching_goal/result</span></code> from the given package
+<a class="reference external" href="https://github.com/davideCaligola/rt1_assignment2/tree/main/assignment_2_2022">assignment_2_2002</a>,
+provides the number of goal reached or canceled.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_goal_result_count_srv.goal_status_callback">
+<span class="sig-name descname"><span class="pre">goal_status_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PlanningActionResult</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_goal_result_count_srv.html#goal_status_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_goal_result_count_srv.goal_status_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function for service <code class="docutils literal notranslate"><span class="pre">/reaching_goal/result</span></code>.
+If status is <code class="docutils literal notranslate"><span class="pre">SUCCEEDED</span></code>, reached goal counter is increaded by 1
+If status is <code class="docutils literal notranslate"><span class="pre">PREEMPTED</span></code> or <code class="docutils literal notranslate"><span class="pre">ABORTED</span></code>, it increases canceled goal counter by 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>goal_status</strong> (<em>PlanningActionResult</em>) – returns the goal status from its field status.status</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_goal_result_count_srv.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_goal_result_count_srv.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_goal_result_count_srv.main" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Main function of the node</dt><dd><ul class="simple">
+<li><p>initialize the node</p></li>
+<li><p>subscribes to the topic <code class="docutils literal notranslate"><span class="pre">/reaching_goal/result</span></code> to get the new goal status every time it changes</p></li>
+<li><p>creates the service <code class="docutils literal notranslate"><span class="pre">goal_result_counter</span></code> to provide the number of reached and canceled goals</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.robot_goal_result_count_srv.robot_goal_count_handle">
+<span class="sig-name descname"><span class="pre">robot_goal_count_handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">req</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GoalResultCounterRequest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_goal_result_count_srv.html#robot_goal_count_handle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_goal_result_count_srv.robot_goal_count_handle" title="Permalink to this definition"></a></dt>
+<dd><p>Handle for the service <code class="docutils literal notranslate"><span class="pre">goal_result_counter</span></code>.
+It returns an object containing the number of goal reached and canceled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>req</strong> (<em>GoalResultCounterRequest</em>) – not used. Default request argument for service <code class="docutils literal notranslate"><span class="pre">goal_result_counter</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>object containing the number of goal reached and canceled</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="srv_link.html#goalresultcounter-ref"><span class="std std-ref">GoalResultCounterResponse</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="robot_command.html" class="btn btn-neutral float-left" title="robot_command" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="robot_info_print.html" class="btn btn-neutral float-right" title="robot_info_print" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
